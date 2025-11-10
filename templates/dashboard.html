@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · CS Grad Insight{% endblock %}
+{% block content %}
+<h1 class="h3 mb-4">My Dashboard</h1>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5">Profile Snapshot</h2>
+        <form id="profile-form" class="vstack gap-3">
+          <div>
+            <label class="form-label">Preferred Name</label>
+            <input class="form-control" name="preferred_name" />
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <label class="form-label">GPA</label>
+              <input class="form-control" name="gpa" type="number" step="0.01" />
+            </div>
+            <div class="col">
+              <label class="form-label">GPA Scale</label>
+              <input class="form-control" name="gpa_scale" type="number" step="0.01" />
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <label class="form-label">GRE Total</label>
+              <input class="form-control" name="gre_total" type="number" />
+            </div>
+            <div class="col">
+              <label class="form-label">TOEFL Total</label>
+              <input class="form-control" name="toefl_total" type="number" />
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <label class="form-label">Recommendation Strength</label>
+              <select class="form-select" name="recommendation_strength">
+                <option value="">--</option>
+                <option value="strong">Strong</option>
+                <option value="moderate">Moderate</option>
+                <option value="average">Average</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="research_experience" name="research_experience" />
+            <label class="form-check-label" for="research_experience">Research experience</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="internship_experience" name="internship_experience" />
+            <label class="form-check-label" for="internship_experience">Internship experience</label>
+          </div>
+          <div>
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" name="notes" rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Save Profile</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h5">Add Application Result</h2>
+        <form id="application-form" class="vstack gap-3">
+          <div>
+            <label class="form-label">University</label>
+            <input class="form-control" name="university" required />
+          </div>
+          <div>
+            <label class="form-label">Program</label>
+            <input class="form-control" name="program" required />
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <label class="form-label">Degree</label>
+              <input class="form-control" name="degree" />
+            </div>
+            <div class="col">
+              <label class="form-label">Term</label>
+              <input class="form-control" name="term" />
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Country / Region</label>
+            <input class="form-control" name="country" />
+          </div>
+          <div>
+            <label class="form-label">Result</label>
+            <select class="form-select" name="result" required>
+              <option value="">--</option>
+              <option>Admit</option>
+              <option>Reject</option>
+              <option>Waitlist</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Funding / Scholarship</label>
+            <input class="form-control" name="funding" />
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <label class="form-label">Reported GPA</label>
+              <input class="form-control" name="gpa" type="number" step="0.01" />
+            </div>
+            <div class="col">
+              <label class="form-label">GPA Scale</label>
+              <input class="form-control" name="gpa_scale" type="number" step="0.01" />
+            </div>
+          </div>
+          <div class="row g-3">
+            <div class="col">
+              <label class="form-label">GRE Total</label>
+              <input class="form-control" name="gre_total" type="number" />
+            </div>
+            <div class="col">
+              <label class="form-label">Recommendation Strength</label>
+              <select class="form-select" name="recommendation_strength">
+                <option value="">--</option>
+                <option value="strong">Strong</option>
+                <option value="moderate">Moderate</option>
+                <option value="average">Average</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="app_research" name="research_experience" />
+            <label class="form-check-label" for="app_research">Research experience</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="app_internship" name="internship_experience" />
+            <label class="form-check-label" for="app_internship">Internship experience</label>
+          </div>
+          <div>
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" name="notes" rows="2"></textarea>
+          </div>
+          <button class="btn btn-success" type="submit">Add Application</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-2">
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h5 m-0">My Applications</h2>
+          <button class="btn btn-sm btn-outline-secondary" id="refresh-applications">Refresh</button>
+        </div>
+        <div class="table-responsive" style="max-height: 400px">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>University</th>
+                <th>Program</th>
+                <th>Term</th>
+                <th>Result</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="applications-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h2 class="h5 m-0">Match Suggestions</h2>
+          <button class="btn btn-sm btn-outline-primary" id="refresh-suggestions">Update</button>
+        </div>
+        <div id="suggestions" class="small"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="dashboard-alert" class="alert d-none mt-4" role="alert"></div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+{% endblock %}
