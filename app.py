@@ -409,6 +409,7 @@ def register_routes(app: Flask) -> None:
 
         if user.profile is None:
             user.profile = Profile(user=user)
+            db.session.add(user.profile)
 
         fields = [
             "preferred_name",
