@@ -1,88 +1,98 @@
 {% extends "base.html" %}
 {% block title %}Explore · CS Grad Insight{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+<div class="d-flex flex-wrap justify-content-between align-items-start mb-4 gap-3">
   <div>
-    <h1 class="h3">Explore Application Outcomes</h1>
-    <p class="text-muted mb-0">Filter by school, program, term, or result to see anonymized entries.</p>
+    <h1 class="h3 mb-2">Explore Application Outcomes</h1>
+    <p class="text-muted mb-0">Filter by school, program, term, or result to see anonymized application records from the community.</p>
   </div>
   <div class="text-end">
-    <div class="fw-semibold">Total records: {{ stats.total_applications }}</div>
-    <small class="text-muted">Updated live from the database.</small>
+    <div class="fw-semibold fs-6">Total records</div>
+    <div class="display-6" style="font-size: 2.5rem; line-height: 1">{{ stats.total_applications }}</div>
+    <small class="text-muted">Updated live</small>
   </div>
 </div>
 
-<form id="search-form" class="card shadow-sm p-3 mb-4">
+<form id="search-form" class="card shadow-sm p-4 mb-4">
+  <h5 class="mb-3">Search & Filter</h5>
   <div class="row g-3">
-    <div class="col-md-3">
-      <label class="form-label">University</label>
-      <input class="form-control" name="university" placeholder="e.g. Stanford" />
+    <div class="col-md-3 col-sm-6">
+      <label class="form-label fw-500">University</label>
+      <input class="form-control" name="university" placeholder="e.g., Stanford" />
     </div>
-    <div class="col-md-3">
-      <label class="form-label">Program</label>
-      <input class="form-control" name="program" placeholder="e.g. MS CS" />
+    <div class="col-md-3 col-sm-6">
+      <label class="form-label fw-500">Program</label>
+      <input class="form-control" name="program" placeholder="e.g., MS CS" />
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Country</label>
-      <input class="form-control" name="country" />
+    <div class="col-md-2 col-sm-6">
+      <label class="form-label fw-500">Country</label>
+      <input class="form-control" name="country" placeholder="e.g., USA" />
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Degree</label>
+    <div class="col-md-2 col-sm-6">
+      <label class="form-label fw-500">Degree Type</label>
       <select class="form-select" name="degree">
-        <option value="">Any</option>
-        <option>MS</option>
-        <option>PhD</option>
-        <option>MEng</option>
+        <option value="">Any degree</option>
+        <option value="MS">Master's (MS/MSc)</option>
+        <option value="PhD">PhD</option>
+        <option value="MEng">Engineering (MEng)</option>
+        <option value="Other">Other</option>
       </select>
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Result</label>
+    <div class="col-md-2 col-sm-6">
+      <label class="form-label fw-500">Result</label>
       <select class="form-select" name="result">
-        <option value="">Any</option>
-        <option>Admit</option>
-        <option>Reject</option>
-        <option>Waitlist</option>
+        <option value="">Any result</option>
+        <option value="Admit">Admit</option>
+        <option value="Reject">Reject</option>
+        <option value="Waitlist">Waitlist</option>
       </select>
     </div>
   </div>
   <div class="row g-3 mt-2 align-items-end">
-    <div class="col-md-2">
-      <label class="form-label">Term</label>
+    <div class="col-md-2 col-sm-6">
+      <label class="form-label fw-500">Application Term</label>
       <input class="form-control" name="term" placeholder="Fall 2024" />
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Sort</label>
+    <div class="col-md-2 col-sm-6">
+      <label class="form-label fw-500">Sort By</label>
       <select class="form-select" name="sort">
         <option value="recent">Most recent</option>
-        <option value="university">University</option>
-        <option value="program">Program</option>
+        <option value="university">University A-Z</option>
+        <option value="program">Program A-Z</option>
       </select>
     </div>
-    <div class="col-md-2">
-      <label class="form-label">Limit</label>
+    <div class="col-md-2 col-sm-6">
+      <label class="form-label fw-500">Results per page</label>
       <input class="form-control" type="number" name="limit" value="50" min="1" max="200" />
     </div>
-    <div class="col-md-6 text-md-end">
-      <button class="btn btn-primary" type="submit">Search</button>
-      <button class="btn btn-outline-secondary" type="reset" id="reset-search">Reset</button>
+    <div class="col-md-6 col-sm-12">
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary flex-grow-1" type="submit">
+          <span class="spinner-border spinner-border-sm me-2 d-none" id="search-spinner"></span>
+          Search
+        </button>
+        <button class="btn btn-outline-secondary" type="reset" id="reset-search" title="Clear filters and reset">Reset</button>
+      </div>
     </div>
   </div>
 </form>
 
 <div class="card shadow-sm">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+  <div class="card-header bg-light border-bottom">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
       <div>
-        <div class="fw-semibold">Results</div>
+        <h5 class="mb-0">Results</h5>
         <small class="text-muted" id="results-count">Showing up to 0 entries.</small>
       </div>
-      <a class="btn btn-sm btn-outline-primary" href="/api/search/applications" target="_blank">
-        Raw API
+      <a class="btn btn-sm btn-outline-primary" href="/api/search/applications?limit=100" target="_blank" rel="noopener" title="View raw API response">
+        View Raw API
       </a>
     </div>
-    <div class="table-responsive" style="max-height: 500px">
-      <table class="table table-striped">
-        <thead>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height: 600px">
+      <table class="table table-striped table-hover align-middle mb-0">
+        <thead class="table-light position-sticky top-0">
           <tr>
             <th>University</th>
             <th>Program</th>
@@ -91,10 +101,18 @@
             <th>Result</th>
             <th>GPA</th>
             <th>GRE</th>
+            <th class="text-center">Experience</th>
           </tr>
         </thead>
-        <tbody id="results-body"></tbody>
+        <tbody id="results-body">
+          <tr>
+            <td colspan="8" class="text-center text-muted py-4">No results. Try adjusting your search filters.</td>
+          </tr>
+        </tbody>
       </table>
+    </div>
+    <div id="empty-results-msg" class="alert alert-info m-3 mb-0 d-none" role="alert">
+      No matching records found. Try using fewer filters or searching for different values.
     </div>
   </div>
 </div>

@@ -91,16 +91,20 @@
 
   async function saveProfile(event) {
     event.preventDefault();
+    const spinner = document.getElementById('profile-loading');
     const payload = cleanupPayload(formToJSON(profileForm));
     try {
+      if (spinner) spinner.classList.remove('d-none');
       await apiFetch('/api/profile', {
         method: 'PUT',
         body: JSON.stringify(payload),
       });
-      showAlert('Profile saved', 'success');
+      showAlert('Profile saved successfully!', 'success');
       await loadSuggestions();
     } catch (error) {
-      showAlert(error.message, 'danger');
+      showAlert(`Error: ${error.message}`, 'danger');
+    } finally {
+      if (spinner) spinner.classList.add('d-none');
     }
   }
 

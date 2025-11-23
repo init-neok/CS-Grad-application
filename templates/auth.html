@@ -2,33 +2,40 @@
 {% block title %}Sign in · CS Grad Insight{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-lg-6">
+  <div class="col-lg-5">
     <div class="card shadow-sm">
+      <div class="card-header bg-light border-bottom">
+        <h1 class="h5 mb-0">Access Your Dashboard</h1>
+        <p class="text-muted small mb-0 mt-1">Manage your profile and application records</p>
+      </div>
       <div class="card-body">
-        <h1 class="h3 mb-4">Access your dashboard</h1>
         <div id="auth-alert" class="alert d-none" role="alert"></div>
 
-        <ul class="nav nav-pills mb-3" id="authTabs" role="tablist">
-          <li class="nav-item" role="presentation">
+        <ul class="nav nav-pills mb-4" id="authTabs" role="tablist">
+          <li class="nav-item flex-grow-1" role="presentation">
             <button
-              class="nav-link active"
+              class="nav-link active w-100"
               id="login-tab"
               data-bs-toggle="pill"
               data-bs-target="#login-pane"
               type="button"
               role="tab"
+              aria-controls="login-pane"
+              aria-selected="true"
             >
               Login
             </button>
           </li>
-          <li class="nav-item" role="presentation">
+          <li class="nav-item flex-grow-1" role="presentation">
             <button
-              class="nav-link"
+              class="nav-link w-100"
               id="register-tab"
               data-bs-toggle="pill"
               data-bs-target="#register-pane"
               type="button"
               role="tab"
+              aria-controls="register-pane"
+              aria-selected="false"
             >
               Sign up
             </button>
@@ -36,34 +43,93 @@
         </ul>
 
         <div class="tab-content">
-          <div class="tab-pane fade show active" id="login-pane" role="tabpanel">
+          <div class="tab-pane fade show active" id="login-pane" role="tabpanel" aria-labelledby="login-tab">
             <form id="login-form" class="vstack gap-3" autocomplete="on">
               <div>
-                <label class="form-label" for="login-email">Email</label>
-                <input class="form-control" type="email" id="login-email" name="email" required />
+                <label class="form-label fw-500" for="login-email">Email Address</label>
+                <input
+                  class="form-control"
+                  type="email"
+                  id="login-email"
+                  name="email"
+                  placeholder="you@example.com"
+                  required
+                  autocomplete="email"
+                />
               </div>
               <div>
-                <label class="form-label" for="login-password">Password</label>
-                <input class="form-control" type="password" id="login-password" name="password" required />
+                <label class="form-label fw-500" for="login-password">Password</label>
+                <input
+                  class="form-control"
+                  type="password"
+                  id="login-password"
+                  name="password"
+                  placeholder="Enter your password"
+                  required
+                  autocomplete="current-password"
+                />
               </div>
-              <button class="btn btn-primary" type="submit">Login</button>
+              <button class="btn btn-primary btn-lg w-100" type="submit">
+                <span class="spinner-border spinner-border-sm me-2 d-none" id="login-loading"></span>
+                Sign In
+              </button>
+              <p class="text-muted small text-center mb-0">
+                New user? Switch to <a href="#register-pane" data-bs-toggle="pill" data-bs-target="#register-pane">Sign up</a>
+              </p>
             </form>
           </div>
 
-          <div class="tab-pane fade" id="register-pane" role="tabpanel">
+          <div class="tab-pane fade" id="register-pane" role="tabpanel" aria-labelledby="register-tab">
             <form id="register-form" class="vstack gap-3">
               <div>
-                <label class="form-label" for="register-email">Email</label>
-                <input class="form-control" type="email" id="register-email" name="email" required />
+                <label class="form-label fw-500" for="register-email">Email Address</label>
+                <input
+                  class="form-control"
+                  type="email"
+                  id="register-email"
+                  name="email"
+                  placeholder="you@example.com"
+                  required
+                  autocomplete="email"
+                />
+                <small class="text-muted">We'll use this to log you in and send updates</small>
               </div>
               <div>
-                <label class="form-label" for="register-password">Password</label>
-                <input class="form-control" type="password" id="register-password" name="password" required minlength="6" />
+                <label class="form-label fw-500" for="register-password">Password</label>
+                <input
+                  class="form-control"
+                  type="password"
+                  id="register-password"
+                  name="password"
+                  placeholder="At least 6 characters"
+                  required
+                  minlength="6"
+                  autocomplete="new-password"
+                />
+                <small class="text-muted">Choose a strong password to keep your account secure</small>
               </div>
-              <button class="btn btn-success" type="submit">Create account</button>
+              <button class="btn btn-success btn-lg w-100" type="submit">
+                <span class="spinner-border spinner-border-sm me-2 d-none" id="register-loading"></span>
+                Create Account
+              </button>
+              <p class="text-muted small text-center mb-0">
+                Already have an account? Switch to <a href="#login-pane" data-bs-toggle="pill" data-bs-target="#login-pane">Sign in</a>
+              </p>
             </form>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-4 bg-light border-0">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3">About this platform</h6>
+        <ul class="small text-muted list-unstyled">
+          <li class="mb-2">✓ Anonymized application data from real students</li>
+          <li class="mb-2">✓ Search by school, program, degree, and result</li>
+          <li class="mb-2">✓ Get program recommendations based on your profile</li>
+          <li class="mb-0">✓ Contribute your own outcomes to help others</li>
+        </ul>
       </div>
     </div>
   </div>

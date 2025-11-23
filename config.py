@@ -1,4 +1,5 @@
 import os
+from typing import Optional, Type
 
 
 class Config:
@@ -16,11 +17,11 @@ class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
 
 
-config_by_name = {
+config_by_name: dict[str, Type[Config]] = {
     "default": Config,
     "testing": TestConfig,
 }
 
 
-def get_config(name: str | None = None):
-    return config_by_name.get(name or os.environ.get("FLASK_ENV"), Config)
+def get_config(name: Optional[str] = None) -> Type[Config]:
+    return config_by_name.get(name or os.environ.get("FLASK_ENV", "default"), Config)
