@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Universities · CS Grad Insight{% endblock %}
+{% block content %}
+<div class="mb-5">
+  <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+    <div>
+      <h1 class="h3 mb-2">Universities Covered</h1>
+      <p class="text-muted mb-0">Explore application statistics across <span id="uni-count">0</span> universities worldwide.</p>
+    </div>
+    <div class="text-end">
+      <div class="fw-semibold fs-6">Total Applications</div>
+      <div class="display-6" style="font-size: 2.5rem; line-height: 1" id="total-apps">0</div>
+    </div>
+  </div>
+
+  <!-- Tabs for different views -->
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+        📊 Overview
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="programs-tab" data-bs-toggle="tab" data-bs-target="#programs" type="button" role="tab" aria-controls="programs" aria-selected="false">
+        🎓 Programs
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="regional-tab" data-bs-toggle="tab" data-bs-target="#regional" type="button" role="tab" aria-controls="regional" aria-selected="false">
+        🌍 By Region
+      </button>
+    </li>
+  </ul>
+
+  <!-- Overview Tab -->
+  <div class="tab-content">
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+      <div class="row g-4 mb-5">
+        <!-- University Distribution Pie Chart -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-light border-bottom">
+              <h5 class="mb-0">University Distribution</h5>
+              <small class="text-muted">Application count by university</small>
+            </div>
+            <div class="card-body" style="min-height: 400px;">
+              <canvas id="uni-pie-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Universities by Admit Rate -->
+        <div class="col-lg-6">
+          <div class="card shadow-sm h-100">
+            <div class="card-header bg-light border-bottom">
+              <h5 class="mb-0">Top Universities by Admit Rate</h5>
+              <small class="text-muted">Highest admission rates</small>
+            </div>
+            <div class="card-body" style="min-height: 400px; overflow-y: auto;">
+              <div id="top-unis-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admit Rate vs Applications -->
+      <div class="card shadow-sm mb-5">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0">Admit Rate vs Application Count</h5>
+          <small class="text-muted">Scatter plot of universities</small>
+        </div>
+        <div class="card-body" style="min-height: 400px;">
+          <canvas id="uni-scatter-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Programs Tab -->
+    <div class="tab-pane fade" id="programs" role="tabpanel" aria-labelledby="programs-tab">
+      <div class="row g-4 mb-5">
+        <!-- Program Distribution Bar Chart -->
+        <div class="col-lg-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-light border-bottom">
+              <h5 class="mb-0">Program Distribution</h5>
+              <small class="text-muted">Application count by program type</small>
+            </div>
+            <div class="card-body" style="min-height: 400px;">
+              <canvas id="program-bar-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Program Details Table -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0">Program Statistics</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive" style="max-height: 600px;">
+            <table class="table table-striped table-hover align-middle mb-0">
+              <thead class="table-light position-sticky top-0">
+                <tr>
+                  <th>Program</th>
+                  <th class="text-end">Total Applications</th>
+                  <th class="text-end">Admits</th>
+                  <th class="text-end">Admit Rate</th>
+                  <th class="text-center">Universities</th>
+                </tr>
+              </thead>
+              <tbody id="programs-table-body">
+                <tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Regional Tab -->
+    <div class="tab-pane fade" id="regional" role="tabpanel" aria-labelledby="regional-tab">
+      <div class="row g-4 mb-5">
+        <!-- Region Selector -->
+        <div class="col-12">
+          <div class="card shadow-sm">
+            <div class="card-header bg-light border-bottom">
+              <h5 class="mb-0">Select Region</h5>
+            </div>
+            <div class="card-body">
+              <div class="region-selector d-flex flex-wrap gap-2" id="region-selector"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Regional Chart -->
+      <div class="card shadow-sm mb-5">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0" id="region-chart-title">Select a region to view details</h5>
+        </div>
+        <div class="card-body" style="min-height: 400px;">
+          <canvas id="regional-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Regional Details -->
+      <div class="card shadow-sm">
+        <div class="card-header bg-light border-bottom">
+          <h5 class="mb-0">Universities in Selected Region</h5>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive" style="max-height: 600px;">
+            <table class="table table-striped table-hover align-middle mb-0">
+              <thead class="table-light position-sticky top-0">
+                <tr>
+                  <th>University</th>
+                  <th class="text-end">Applications</th>
+                  <th class="text-end">Admits</th>
+                  <th class="text-end">Admit Rate</th>
+                </tr>
+              </thead>
+              <tbody id="regional-table-body">
+                <tr><td colspan="4" class="text-center text-muted py-4">Select a region to view universities</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- University Modal -->
+<div class="modal fade" id="universityModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="universityModalLabel">University Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="universityDetails"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading spinner -->
+<div id="loading-spinner" class="text-center py-5 d-none">
+  <div class="spinner-border text-primary" role="status">
+    <span class="visually-hidden">Loading...</span>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script src="{{ url_for('static', filename='js/universities.js') }}" defer></script>
+{% endblock %}

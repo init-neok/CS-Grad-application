@@ -39,6 +39,9 @@ class User(TimestampMixin, db.Model):
     publications = db.relationship(
         "Publication", back_populates="user", cascade="all,delete"
     )
+    recommendation_letters = db.relationship(
+        "RecommendationLetter", back_populates="user", cascade="all,delete"
+    )
     applications = db.relationship(
         "ApplicationRecord", back_populates="user", cascade="all,delete"
     )
@@ -188,6 +191,30 @@ class Publication(TimestampMixin, db.Model):
         }
 
 
+class RecommendationLetter(TimestampMixin, db.Model):
+    __tablename__ = "recommendation_letters"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    recommender_name = db.Column(db.String(120))
+    relationship = db.Column(db.String(32), nullable=False)  # Research Advisor, Course Instructor, Employer
+    rating = db.Column(db.String(32))  # Strongly Recommend, Recommend
+    organization = db.Column(db.String(120))
+    notes = db.Column(db.Text)
+
+    user = db.relationship("User", back_populates="recommendation_letters")
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "recommender_name": self.recommender_name,
+            "relationship": self.relationship,
+            "rating": self.rating,
+            "organization": self.organization,
+            "notes": self.notes,
+        }
+
+
 class ApplicationRecord(TimestampMixin, db.Model):
     __tablename__ = "application_records"
 
@@ -330,6 +357,11 @@ def register_routes(app: Flask) -> None:
         stats = get_public_stats()
         return render_template("explore.html", stats=stats)
 
+    @app.route("/universities")
+    def universities_page():
+        stats = get_public_stats()
+        return render_template("universities.html", stats=stats)
+
     @app.route("/auth")
     def auth_page():
         if get_current_user():
@@ -397,6 +429,7 @@ def register_routes(app: Flask) -> None:
                 "test_scores": [score.to_dict() for score in user.test_scores],
                 "experiences": [exp.to_dict() for exp in user.experiences],
                 "publications": [pub.to_dict() for pub in user.publications],
+                "recommendation_letters": [letter.to_dict() for letter in user.recommendation_letters],
             }
         )
 
@@ -633,6 +666,46 @@ def register_routes(app: Flask) -> None:
         db.session.commit()
         return jsonify(publication.to_dict())
 
+    # -------- Recommendation Letters --------
+    @app.route("/api/recommendation-letters", methods=["GET", "POST"])
+    @login_required
+    def recommendation_letter_collection():
+        user = get_current_user()
+        assert user
+        if request.method == "GET":
+            return jsonify([letter.to_dict() for letter in user.recommendation_letters])
+
+        payload = request.get_json(silent=True) or {}
+        if not payload.get("relationship"):
+            return jsonify({"error": "relationship is required"}), 400
+
+        letter = RecommendationLetter(user=user)
+        fields = ["recommender_name", "relationship", "rating", "organization", "notes"]
+        update_model_from_json(letter, payload, fields)
+        db.session.add(letter)
+        db.session.commit()
+        return jsonify(letter.to_dict()), 201
+
+    @app.route("/api/recommendation-letters/<int:letter_id>", methods=["PUT", "DELETE"])
+    @login_required
+    def recommendation_letter_resource(letter_id: int):
+        user = get_current_user()
+        assert user
+        letter = RecommendationLetter.query.filter_by(id=letter_id, user_id=user.id).first()
+        if not letter:
+            return jsonify({"error": "Recommendation letter not found"}), 404
+
+        if request.method == "DELETE":
+            db.session.delete(letter)
+            db.session.commit()
+            return jsonify({"message": "Recommendation letter deleted"})
+
+        payload = request.get_json(silent=True) or {}
+        fields = ["recommender_name", "relationship", "rating", "organization", "notes"]
+        update_model_from_json(letter, payload, fields)
+        db.session.commit()
+        return jsonify(letter.to_dict())
+
     # -------- Applications --------
     @app.route("/api/applications/my", methods=["GET"])
     @login_required
@@ -711,6 +784,21 @@ def register_routes(app: Flask) -> None:
     @app.route("/api/public/stats")
     def public_stats_endpoint():
         return jsonify(get_public_stats())
+
+    @app.route("/api/analytics/universities")
+    def universities_distribution():
+        """Get university distribution analytics."""
+        return jsonify(get_university_distribution())
+
+    @app.route("/api/analytics/programs")
+    def programs_distribution():
+        """Get program distribution analytics."""
+        return jsonify(get_program_distribution())
+
+    @app.route("/api/analytics/regional")
+    def regional_distribution():
+        """Get regional/country-based distribution."""
+        return jsonify(get_regional_data())
 
     @app.route("/api/search/applications", methods=["GET"])
     def search_applications():
@@ -818,7 +906,7 @@ def aggregate_program_stats() -> Dict[str, Dict[str, Any]]:
         if record.gpa and record.gpa_scale:
             normalized_gpa = record.gpa / record.gpa_scale
 
-        if record.result and record.result.lower() == "admit":
+        if record.result and record.result.lower() == "accept":
             entry["admitted"] += 1
             if normalized_gpa is not None:
                 entry["gpa_values"].append(normalized_gpa)
@@ -840,6 +928,143 @@ def aggregate_program_stats() -> Dict[str, Dict[str, Any]]:
         info.pop("gpa_values", None)
         info.pop("gre_values", None)
     return stats
+
+
+def get_university_distribution() -> Dict[str, Any]:
+    """Get university distribution data for visualization."""
+    records = ApplicationRecord.query.all()
+    university_stats: Dict[str, Dict[str, Any]] = {}
+
+    for record in records:
+        uni = record.university
+        if uni not in university_stats:
+            university_stats[uni] = {
+                "university": uni,
+                "country": record.country,
+                "total_applications": 0,
+                "admits": 0,
+                "rejects": 0,
+                "waitlists": 0,
+                "programs": set(),
+                "admit_rate": 0.0,
+            }
+
+        stats = university_stats[uni]
+        stats["total_applications"] += 1
+        if record.program:
+            stats["programs"].add(record.program)
+
+        result = (record.result or "").lower()
+        if result == "accept":
+            stats["admits"] += 1
+        elif result == "reject":
+            stats["rejects"] += 1
+        elif result == "waitlist":
+            stats["waitlists"] += 1
+
+    # Convert sets to lists and calculate admit rates
+    for uni_data in university_stats.values():
+        uni_data["programs"] = list(uni_data["programs"])
+        uni_data["admit_rate"] = round(
+            uni_data["admits"] / uni_data["total_applications"], 3
+            if uni_data["total_applications"] > 0
+            else 0
+        )
+
+    return {
+        "total_universities": len(university_stats),
+        "universities": list(university_stats.values()),
+    }
+
+
+def get_program_distribution() -> Dict[str, Any]:
+    """Get program distribution data for visualization."""
+    records = ApplicationRecord.query.all()
+    program_stats: Dict[str, Dict[str, Any]] = {}
+
+    for record in records:
+        program = record.program
+        if program not in program_stats:
+            program_stats[program] = {
+                "program": program,
+                "total_applications": 0,
+                "admits": 0,
+                "universities": set(),
+                "admit_rate": 0.0,
+            }
+
+        stats = program_stats[program]
+        stats["total_applications"] += 1
+        stats["universities"].add(record.university)
+
+        result = (record.result or "").lower()
+        if result == "accept":
+            stats["admits"] += 1
+
+    # Convert sets to lists and calculate admit rates
+    for prog_data in program_stats.values():
+        prog_data["universities"] = list(prog_data["universities"])
+        prog_data["admit_rate"] = round(
+            prog_data["admits"] / prog_data["total_applications"], 3
+            if prog_data["total_applications"] > 0
+            else 0
+        )
+
+    return {
+        "total_programs": len(program_stats),
+        "programs": list(program_stats.values()),
+    }
+
+
+def get_regional_data() -> Dict[str, Any]:
+    """Get university data grouped by region/country."""
+    records = ApplicationRecord.query.all()
+    regional_data: Dict[str, Dict[str, Any]] = {}
+
+    for record in records:
+        country = record.country or "Unknown"
+        if country not in regional_data:
+            regional_data[country] = {
+                "country": country,
+                "universities": {},
+                "total_applications": 0,
+            }
+
+        region_stats = regional_data[country]
+        region_stats["total_applications"] += 1
+
+        uni = record.university
+        if uni not in region_stats["universities"]:
+            region_stats["universities"][uni] = {
+                "university": uni,
+                "applications": 0,
+                "admits": 0,
+            }
+
+        uni_stats = region_stats["universities"][uni]
+        uni_stats["applications"] += 1
+        if (record.result or "").lower() == "accept":
+            uni_stats["admits"] += 1
+
+    # Convert to list format for easier frontend processing
+    regions = []
+    for country, data in regional_data.items():
+        universities = []
+        for uni, stats in data["universities"].items():
+            universities.append({
+                "university": uni,
+                "applications": stats["applications"],
+                "admits": stats["admits"],
+                "admit_rate": round(stats["admits"] / stats["applications"], 3) if stats["applications"] > 0 else 0,
+            })
+
+        regions.append({
+            "country": country,
+            "total_applications": data["total_applications"],
+            "universities": universities,
+        })
+
+    return {"regions": sorted(regions, key=lambda x: x["total_applications"], reverse=True)}
 
 
 app = create_app()
